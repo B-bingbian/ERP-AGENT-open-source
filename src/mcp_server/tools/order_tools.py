@@ -1,6 +1,6 @@
 """
-采购订单管理 MCP 工具
-order_create / order_update / order_page / order_get / order_search_details / order_statistics
+采购订单管理 M工具
+order_createCP  / order_update / order_page / order_get / order_search_details / order_statistics
 """
 import json
 from typing import Optional
@@ -14,7 +14,7 @@ def register_order_tools(mcp: FastMCP):
     @mcp.tool()
     async def order_create(order_data: str) -> str:
         """创建采购订单。
-
+l6
         Args:
             order_data: 订单数据JSON字符串，格式：
                 {

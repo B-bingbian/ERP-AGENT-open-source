@@ -1,6 +1,7 @@
 "use client";
 
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Bot, User } from "lucide-react";
 import { ChatMessage } from "@/lib/types";
 import ToolCallDisplay from "./ToolCallDisplay";
@@ -56,7 +57,7 @@ export default function MessageBubble({
           </div>
         ) : (
           <div className="text-sm markdown-body">
-            <ReactMarkdown>{message.content}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
           </div>
         )}
 

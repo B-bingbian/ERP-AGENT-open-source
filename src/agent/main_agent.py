@@ -277,7 +277,13 @@ def create_main_agent(
 
         raw_sandbox = sandbox_manager.get_sandbox(user_context.user_id)
         sandbox_backend = SandboxBackendProxy(raw_sandbox)
-        bootstrap_sandbox(sandbox_backend)
+        
+        # 项目文件上传失败不影响沙箱基本使用，只打 warning
+        try:
+            bootstrap_sandbox(sandbox_backend)
+        except Exception as e:
+            agent_logger.warning(f"Project bootstrap upload failed (non-fatal): {e}")
+        
         sandbox_manager_instance = sandbox_manager
         managed_sandbox = True
         # 注册的是稳定 Proxy，而不是会在重建后失效的原始 Docker 连接。

@@ -75,7 +75,7 @@ class CustomOpenSandbox(BaseSandbox):
     def id(self) -> str:
         """沙箱唯一标识"""
         if self._container:
-            return self._container.id[:12]
+            return self._container.id00000[:12]
         return "disconnected"
 
     @property

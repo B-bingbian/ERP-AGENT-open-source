@@ -15,9 +15,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from .api.chat import router as chat_router
 from .api.history import router as history_router
-from .web_config import close_mongo_client
+from .api.chat import router as chat_router
+from .web_config import close_postgres_pool
 from ..agent.log_utils import web_logger
 from ..agent.backends.sandbox_manager import sandbox_manager
 from ..agent.config import SANDBOX_MAINTENANCE_INTERVAL_SECONDS
@@ -65,7 +65,7 @@ async def lifespan(app: FastAPI):
             with suppress(asyncio.CancelledError):
                 await maintenance_task
         # 不销毁已认领容器：Manager 会把 user → container 映射持久化，重启后可恢复。
-        await close_mongo_client()
+        await close_postgres_pool()
 
 
 app = FastAPI(
@@ -118,5 +118,8 @@ async def health():
 
 
 if __name__ == "__main__":
+    # psycopg async requires SelectorEventLoop on Windows (Proactor is incompatible)
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, loop="none")

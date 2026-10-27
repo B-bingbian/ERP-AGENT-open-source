@@ -189,9 +189,9 @@ class SandboxManager:
         # 生成唯一容器名
         name = f"erp-sandbox-warm-{uuid.uuid4().hex[:12]}"
 
-        # python:3.11-slim 已带 Python；图表和 Skill 依赖按需安装到
-        # /workspace/python-packages，预热阶段不做耗时网络安装。
-        config = SandboxConfig(name=name, runtimes=[])
+        # python:3.11-slim 已带 Python；预装 matplotlib/pandas/numpy 到
+        # /workspace/python-packages，避免首次调用图表工具时临时安装失败。
+        config = SandboxConfig(name=name, runtimes=["python"])
         sandbox = create_secure_sandbox(config)
         sandbox.execute(
             "mkdir -p /workspace /workspace/data /workspace/analysis "

@@ -44,7 +44,6 @@ async def test_mcp_tools():
     """测试MCP工具加载"""
     print("[3] 测试 MCP 工具加载...")
     from agent.tools.mcp_client import load_mcp_tools_sync
-
     try:
         tools = load_mcp_tools_sync()
         print(f"    加载了 {len(tools)} 个MCP工具")

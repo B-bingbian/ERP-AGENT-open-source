@@ -69,47 +69,29 @@ def download_sandbox_file(remote_path: str, filename: str = "") -> str:
     if not filename:
         filename = Path(remote_path).name
 
-    # === 方式1：从 Docker 沙箱下载 ===
-    container, docker_client = _get_docker_container()
-    if container is not None:
+    # === 方式1：从当前用户的 Docker 沙箱下载 ===
+    from ..backends.sandbox_holder import get_sandbox
+    sandbox = get_sandbox()
+    
+    if sandbox is not None:
         try:
             # 检查文件是否存在
-            check = container.exec_run(f"test -f '{remote_path}' && echo EXISTS || echo NOT_FOUND")
-            if check.exit_code != 0 or b"NOT_FOUND" in (check.output or b""):
-                docker_client.close()
+            if not sandbox.file_exists(remote_path):
                 return f"文件不存在于沙箱中: {remote_path}"
 
-            # 获取文件大小
-            size_check = container.exec_run(f"stat -c %s '{remote_path}'")
-            file_size = int(size_check.output.decode().strip()) if size_check.exit_code == 0 else 0
-
-            # 使用 base64 读取文件（支持二进制）
-            read_result = container.exec_run(
-                f"base64 '{remote_path}'",
-                demux=True,
-            )
-
-            if read_result.exit_code != 0:
-                docker_client.close()
-                return f"无法读取沙箱文件: {remote_path}"
-
-            stdout = read_result.output[0] if isinstance(read_result.output, tuple) else read_result.output
-            if not stdout:
-                docker_client.close()
+            # 读取文件内容（自动处理二进制）
+            content = sandbox.read_file_bytes(remote_path)
+            if not content:
                 return f"文件内容为空: {remote_path}"
-
-            # 解码 base64
-            content = base64.b64decode(stdout.strip())
 
             # 写入下载目录
             target = DOWNLOAD_DIR / filename
             target.write_bytes(content)
 
-            docker_client.close()
-
             download_url = f"http://localhost:8000/api/download/{filename}"
+            file_size = len(content)
             agent_logger.info(
-                f"File downloaded from sandbox: {remote_path} -> {target} ({len(content)} bytes)"
+                f"File downloaded from sandbox: {remote_path} -> {target} ({file_size} bytes)"
             )
             return (
                 f"✅ 文件已从沙箱下载!\n"
@@ -120,8 +102,6 @@ def download_sandbox_file(remote_path: str, filename: str = "") -> str:
             )
 
         except Exception as e:
-            if docker_client:
-                docker_client.close()
             agent_logger.error(f"Sandbox download error: {e}")
             # 回退到本地文件检查
 

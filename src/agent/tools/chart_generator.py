@@ -284,7 +284,16 @@ def generate_chart(
         sandbox.write_file(script_path, CHART_SCRIPT)
 
         # 安装依赖（仅首次，后续复用缓存）
-        sandbox.execute("pip install -q matplotlib numpy 2>/dev/null || true", timeout=60)
+        # 根文件系统只读，必须装到 /workspace/python-packages（tmpfs 可写）
+        # 镜像已预装依赖，无需重复安装
+        # install_ret = sandbox.execute(
+        #     "python -m pip install --target /workspace/python-packages matplotlib numpy -q 2>&1 | tail -3",
+        #     timeout=60,
+        # )
+        # if install_ret.exit_code != 0:
+        #     agent_logger.warning(
+        #         f"Chart deps install (may already be cached): {install_ret.output[:200]}"
+        #     )
 
         # 在沙箱内执行图表生成
         result = sandbox.execute(f"python {script_path} {params_path}", timeout=30)

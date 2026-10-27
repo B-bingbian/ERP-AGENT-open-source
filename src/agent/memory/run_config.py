@@ -9,3 +9,7 @@ def current_thread_id(runtime=None) -> str:
         config = getattr(runtime, "config", {})
     value = config.get("configurable", {}).get("thread_id") if isinstance(config, dict) else None
     return str(value) if value is not None else ""
+
+
+
+

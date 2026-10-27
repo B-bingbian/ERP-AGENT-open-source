@@ -39,13 +39,13 @@ class SandboxConfig:
     work_dir: str = SANDBOX_WORK_DIR
 
     # --- 安全防护 ---
-    read_only: bool = True
-    memory_limit: str = "512m"
+    read_only: bool = False
+    memory_limit: str = "1g"
     cpu_limit: float = 1.0
     network_mode: str = "bridge"          # "none" = 完全隔离, "bridge" = 受限
-    tmpfs_size: str = "128m"
+    tmpfs_size: str = "256m"
     drop_all_caps: bool = True
-    use_seccomp: bool = True
+    use_seccomp: bool = False
     seccomp_path: str = ""                # 空则使用内置 seccomp.json
 
     # --- 多语言运行时 ---
@@ -111,7 +111,7 @@ def create_secure_sandbox(config: SandboxConfig | None = None) -> CustomOpenSand
         "pids_limit": 256,
         "tmpfs": {
             "/tmp": f"rw,noexec,nosuid,size={config.tmpfs_size}",
-            "/workspace": f"rw,noexec,nosuid,size=256m",
+            "/workspace": f"rw,nosuid,size=512m",
             # ``--read-only`` 会让根目录下的 /skills 不可写；Skills 同步、
             # 用户 Skills 恢复都必须在独立的可写挂载点完成。
             "/skills": "rw,nosuid,nodev,size=128m",
@@ -133,7 +133,7 @@ def create_secure_sandbox(config: SandboxConfig | None = None) -> CustomOpenSand
     # seccomp 安全策略
     security_opts = []
     if seccomp_profile:
-        security_opts.append(f"seccomp={seccomp_path}")
+        security_opts.append(f"seccomp={seccomp_profile}")
     security_opts.append("no-new-privileges:true")
     host_config_kwargs["security_opt"] = security_opts
 
